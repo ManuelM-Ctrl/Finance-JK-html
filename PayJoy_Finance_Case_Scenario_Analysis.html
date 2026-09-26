@@ -1,0 +1,870 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PayJoy · Strategic Scenario Analysis</title>
+<style>
+:root{
+  --navy:#0a2540; --navy-2:#0f3457; --navy-3:#16456f;
+  --ink:#0b1b2b; --ink-2:#3a4a5a; --muted:#7a8798; --faint:#aeb8c4;
+  --paper:#f4f6f9; --card:#ffffff; --line:#e3e8ef; --line-2:#eef1f6;
+  --blue:#2a78d6; --blue-soft:#cfe0f7;
+  --s1:#eb6834; --s1-soft:#fbe0d3; --s1-ink:#b64518;
+  --s2:#1baf7a; --s2-soft:#cdeee1; --s2-ink:#0d7a54;
+  --crit:#d03b3b; --good:#0ca30c; --gold:#c7a24a;
+  --shadow:0 1px 2px rgba(10,37,64,.06),0 8px 30px rgba(10,37,64,.08);
+  --shadow-lg:0 20px 60px rgba(10,37,64,.16);
+  --sans:system-ui,-apple-system,"Segoe UI",sans-serif;
+  --tab:"tnum" 1; font-variant-numeric:tabular-nums;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{font-family:var(--sans);background:#0a2540;color:var(--ink);overflow:hidden;-webkit-font-smoothing:antialiased}
+.num{font-variant-numeric:tabular-nums}
+
+/* ---------- Deck / slides ---------- */
+.deck{position:fixed;inset:0}
+.slide{position:absolute;inset:0;opacity:0;visibility:hidden;transform:translateY(14px);
+  transition:opacity .55s cubic-bezier(.4,0,.2,1),transform .55s cubic-bezier(.4,0,.2,1),visibility .55s;
+  overflow:hidden;display:flex;flex-direction:column}
+.slide.active{opacity:1;visibility:visible;transform:none;z-index:2}
+.slide.prev{transform:translateY(-14px)}
+
+/* analytical (light) vs section (navy) */
+.slide.light{background:var(--paper);color:var(--ink)}
+.slide.dark{background:radial-gradient(120% 120% at 15% 0%,#0f3457 0%,#0a2540 55%,#071a2e 100%);color:#eaf1f8}
+
+/* inner padding shell */
+.wrap{flex:1;display:flex;flex-direction:column;padding:3.4vh 4.2vw 3.0vh;min-height:0}
+
+/* slide header */
+.shead{display:flex;align-items:flex-end;justify-content:space-between;gap:2rem;padding-bottom:1.1vh;border-bottom:1px solid var(--line);margin-bottom:2.0vh}
+.slide.dark .shead{border-color:rgba(255,255,255,.14)}
+.kicker{display:flex;align-items:center;gap:.6rem;font-size:.72rem;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--blue)}
+.slide.dark .kicker{color:#7db4f0}
+.kicker .step{display:inline-flex;align-items:center;justify-content:center;min-width:1.5rem;height:1.5rem;padding:0 .35rem;background:var(--navy);color:#fff;border-radius:5px;font-size:.7rem;letter-spacing:0}
+.htitle{font-size:clamp(1.35rem,2.55vw,2.15rem);font-weight:760;line-height:1.12;letter-spacing:-.02em;margin-top:.5rem;max-width:min(64ch,72vw)}
+.htitle .accent{color:var(--s2-ink)}
+.htitle .warn{color:var(--s1-ink)}
+.hmeta{text-align:right;font-size:.74rem;color:var(--muted);line-height:1.5;white-space:nowrap}
+.hmeta b{color:var(--ink-2);font-weight:700}
+
+/* body grid area */
+.body{flex:1;min-height:0;display:flex;flex-direction:column;gap:1.6vh}
+
+/* ---------- Title slide ---------- */
+.title-slide .wrap{justify-content:center;padding:0 8vw}
+.brandrow{display:flex;align-items:center;gap:.9rem;margin-bottom:2.4rem}
+.brand-mark{width:2.5rem;height:2.5rem;border-radius:9px;background:linear-gradient(135deg,#2a78d6,#1baf7a);display:flex;align-items:center;justify-content:center;font-weight:800;color:#fff;font-size:1.15rem;box-shadow:0 6px 20px rgba(42,120,214,.35)}
+.brand-name{font-weight:750;letter-spacing:.02em;font-size:1.1rem}
+.brand-tag{font-size:.74rem;letter-spacing:.22em;text-transform:uppercase;color:#8fb4dd}
+.eyebrow{font-size:.8rem;font-weight:700;letter-spacing:.28em;text-transform:uppercase;color:#7db4f0;margin-bottom:1.4rem}
+.big-title{font-size:clamp(2.2rem,5.4vw,4.6rem);font-weight:800;line-height:1.02;letter-spacing:-.03em;max-width:20ch}
+.big-title .g{background:linear-gradient(100deg,#4a9bef,#2fd1a0);-webkit-background-clip:text;background-clip:text;color:transparent}
+.subtitle{margin-top:1.8rem;font-size:clamp(1rem,1.7vw,1.35rem);color:#bcd2e8;font-weight:420;max-width:52ch;line-height:1.5}
+.decision-strip{margin-top:3.2rem;display:flex;gap:1rem;flex-wrap:wrap;align-items:stretch}
+.dchip{flex:1;min-width:220px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.12);border-radius:12px;padding:1.1rem 1.3rem;backdrop-filter:blur(6px)}
+.dchip .q{font-size:.72rem;letter-spacing:.14em;text-transform:uppercase;color:#8fb4dd;font-weight:700;margin-bottom:.5rem}
+.dchip .a{font-size:1.02rem;font-weight:600;line-height:1.35;color:#eaf1f8}
+.dchip.v1{border-color:rgba(235,104,52,.4)}
+.dchip.v1 .q{color:#f0a583}
+.dchip.v2{border-color:rgba(27,175,122,.45);background:rgba(27,175,122,.08)}
+.dchip.v2 .q{color:#63d5aa}
+.title-foot{margin-top:2.6rem;font-size:.78rem;color:#7f9bb8;letter-spacing:.04em}
+
+/* ---------- KPI cards ---------- */
+.kpi-row{display:grid;gap:.9rem}
+.kpi-6{grid-template-columns:repeat(6,1fr)}
+.kpi{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:1.05rem 1.1rem;box-shadow:var(--shadow);display:flex;flex-direction:column;gap:.25rem;position:relative;overflow:hidden}
+.kpi::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--blue)}
+.kpi.g::before{background:var(--good)} .kpi.o::before{background:var(--s1)} .kpi.t::before{background:var(--s2)}
+.kpi .lab{font-size:.68rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.kpi .val{font-size:clamp(1.35rem,2.3vw,1.9rem);font-weight:770;letter-spacing:-.02em;color:var(--ink);line-height:1}
+.kpi .val small{font-size:.62em;font-weight:650;color:var(--ink-2)}
+.kpi .sub{font-size:.72rem;color:var(--ink-2);font-weight:500}
+.kpi .sub b{color:var(--good);font-weight:700}
+.kpi .sub b.dn{color:var(--crit)}
+
+/* ---------- panels & charts ---------- */
+.cols{display:grid;gap:1.2rem;flex:1;min-height:0}
+.c-2{grid-template-columns:1.15fr .85fr}
+.c-2b{grid-template-columns:1fr 1fr}
+.c-3{grid-template-columns:repeat(3,1fr)}
+.panel{background:var(--card);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);padding:1.2rem 1.3rem;display:flex;flex-direction:column;min-height:0}
+.panel.flush{padding:1.1rem 1.2rem 0.6rem}
+.p-title{font-size:.9rem;font-weight:730;color:var(--ink);letter-spacing:-.01em;display:flex;align-items:center;justify-content:space-between;gap:1rem}
+.p-title .unit{font-size:.68rem;font-weight:600;color:var(--muted);letter-spacing:.02em;text-transform:none}
+.p-sub{font-size:.75rem;color:var(--muted);margin-top:.15rem;font-weight:500}
+.chart-holder{flex:1;min-height:0;position:relative;margin-top:.5rem}
+svg.chart{width:100%;height:100%;display:block;overflow:visible}
+
+/* legend */
+.legend{display:flex;gap:1.1rem;flex-wrap:wrap;margin-top:.35rem}
+.lg{display:flex;align-items:center;gap:.4rem;font-size:.74rem;color:var(--ink-2);font-weight:600}
+.lg .sw{width:12px;height:12px;border-radius:3px}
+.lg .swl{width:16px;height:3px;border-radius:2px}
+
+/* insights */
+.insights{display:flex;flex-direction:column;gap:.7rem}
+.ins{display:flex;gap:.75rem;align-items:flex-start;background:var(--card);border:1px solid var(--line);border-radius:11px;padding:.85rem .95rem;box-shadow:var(--shadow)}
+.ins .ic{flex:none;width:1.7rem;height:1.7rem;border-radius:7px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:.9rem;color:#fff;background:var(--navy)}
+.ins.pos .ic{background:var(--good)} .ins.cau .ic{background:var(--s1)}
+.ins .tx{font-size:.82rem;line-height:1.4;color:var(--ink-2)}
+.ins .tx b{color:var(--ink);font-weight:730}
+
+/* ---------- strategic choice ---------- */
+.paths{display:grid;grid-template-columns:1fr 1fr;gap:1.4rem;flex:1;min-height:0}
+.path{border-radius:16px;padding:1.8rem 1.9rem;display:flex;flex-direction:column;position:relative;overflow:hidden;border:1px solid}
+.path.p1{background:linear-gradient(160deg,#fff,#fdf1ea);border-color:var(--s1-soft)}
+.path.p2{background:linear-gradient(160deg,#fff,#e9f8f1);border-color:var(--s2-soft)}
+.path .tag{align-self:flex-start;font-size:.72rem;font-weight:800;letter-spacing:.12em;text-transform:uppercase;padding:.35rem .7rem;border-radius:20px;color:#fff}
+.path.p1 .tag{background:var(--s1)} .path.p2 .tag{background:var(--s2)}
+.path h3{font-size:1.5rem;font-weight:780;letter-spacing:-.02em;margin:1rem 0 .3rem}
+.path.p1 h3{color:var(--s1-ink)} .path.p2 h3{color:var(--s2-ink)}
+.path .lede{font-size:.92rem;color:var(--ink-2);line-height:1.5;margin-bottom:1.1rem;font-weight:500}
+.path ul{list-style:none;display:flex;flex-direction:column;gap:.6rem;margin-top:auto}
+.path li{display:flex;gap:.6rem;font-size:.86rem;color:var(--ink-2);align-items:flex-start;line-height:1.35}
+.path li .b{flex:none;width:1.2rem;height:1.2rem;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.7rem;font-weight:800;color:#fff;margin-top:.05rem}
+.path.p1 li .b{background:var(--s1)} .path.p2 li .b{background:var(--s2)}
+.path .foot-metric{margin-top:1.2rem;padding-top:1rem;border-top:1px dashed;display:flex;gap:1.6rem}
+.path.p1 .foot-metric{border-color:var(--s1-soft)} .path.p2 .foot-metric{border-color:var(--s2-soft)}
+.path .fm .v{font-size:1.35rem;font-weight:800;letter-spacing:-.02em}
+.path.p1 .fm .v{color:var(--s1-ink)} .path.p2 .fm .v{color:var(--s2-ink)}
+.path .fm .l{font-size:.68rem;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;font-weight:700}
+.vs{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:5;width:3rem;height:3rem;border-radius:50%;background:var(--navy);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:.85rem;box-shadow:var(--shadow-lg);letter-spacing:.02em}
+.flowbar{display:flex;align-items:center;gap:.4rem;margin-bottom:1.4rem;flex-wrap:wrap;justify-content:center}
+.flowbar .node{font-size:.74rem;font-weight:700;padding:.4rem .75rem;border-radius:8px;background:#fff;border:1px solid var(--line);color:var(--ink-2);box-shadow:var(--shadow)}
+.flowbar .node.hl{background:var(--navy);color:#fff;border-color:var(--navy)}
+.flowbar .arr{color:var(--faint);font-weight:700}
+
+/* ---------- assumptions tags ---------- */
+.tagchip{display:inline-flex;align-items:center;gap:.35rem;font-size:.66rem;font-weight:700;letter-spacing:.04em;text-transform:uppercase;padding:.2rem .5rem;border-radius:5px}
+.tagchip.case{background:#e7f0fb;color:#1a5aa8} .tagchip.model{background:#fdeee6;color:var(--s1-ink)}
+.tagchip.deriv{background:#efe9fb;color:#5a3aa7} .tagchip.hist{background:#eef1f6;color:var(--ink-2)}
+
+/* ---------- comparison table ---------- */
+.cmp{width:100%;border-collapse:collapse;font-size:.86rem}
+.cmp th,.cmp td{padding:.62rem .8rem;text-align:right;border-bottom:1px solid var(--line-2)}
+.cmp th:first-child,.cmp td:first-child{text-align:left}
+.cmp thead th{font-size:.72rem;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);border-bottom:2px solid var(--line)}
+.cmp thead th.h1{color:var(--s1-ink)} .cmp thead th.h2{color:var(--s2-ink)}
+.cmp td.metric{font-weight:600;color:var(--ink-2)}
+.cmp td.v{font-weight:730;font-variant-numeric:tabular-nums;color:var(--ink)}
+.cmp td.v1{color:var(--s1-ink)} .cmp td.v2{color:var(--s2-ink)}
+.cmp tbody tr:hover{background:var(--line-2)}
+.cmp .win{display:inline-block;margin-left:.4rem;font-size:.62rem;font-weight:800;color:var(--s2-ink)}
+.badge-col{background:rgba(27,175,122,.05)}
+
+/* ---------- recommendation ---------- */
+.rec-hero{display:flex;flex-direction:column;align-items:center;text-align:center;margin-bottom:1.4rem}
+.rec-hero .verdict{font-size:.78rem;letter-spacing:.24em;text-transform:uppercase;color:#63d5aa;font-weight:750;margin-bottom:.7rem}
+.rec-hero h2{font-size:clamp(1.8rem,3.6vw,2.9rem);font-weight:800;letter-spacing:-.025em;line-height:1.08}
+.rec-hero h2 .g{background:linear-gradient(100deg,#4a9bef,#2fd1a0);-webkit-background-clip:text;background-clip:text;color:transparent}
+.rec-hero p{margin-top:.9rem;font-size:1.02rem;color:#c4d6ea;max-width:66ch;line-height:1.5}
+.reasons{display:grid;grid-template-columns:repeat(4,1fr);gap:1rem}
+.reason{background:rgba(255,255,255,.045);border:1px solid rgba(255,255,255,.12);border-radius:13px;padding:1.2rem 1.15rem;display:flex;flex-direction:column;gap:.5rem}
+.reason .rn{font-size:.7rem;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:#63d5aa}
+.reason .rv{font-size:clamp(1.35rem,2.4vw,1.85rem);font-weight:800;letter-spacing:-.02em;color:#fff;line-height:1}
+.reason .rl{font-size:.8rem;color:#bcd2e8;line-height:1.4;font-weight:500}
+.reason .rc{font-size:.72rem;color:#8fb4dd;margin-top:auto;padding-top:.4rem;border-top:1px solid rgba(255,255,255,.1)}
+.reason .rc b.up{color:#63d5aa} .reason .rc b.dn{color:#f0a583}
+
+/* ---------- risks ---------- */
+.risk-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;flex:1;min-height:0}
+.riskcol{background:var(--card);border:1px solid var(--line);border-radius:13px;padding:1.15rem 1.2rem;box-shadow:var(--shadow);display:flex;flex-direction:column}
+.riskcol h4{font-size:.82rem;font-weight:750;color:var(--ink);margin-bottom:.2rem;display:flex;align-items:center;gap:.5rem}
+.riskcol .cd{font-size:.72rem;color:var(--muted);margin-bottom:.9rem}
+.riskcol ul{list-style:none;display:flex;flex-direction:column;gap:.7rem}
+.riskcol li{font-size:.8rem;line-height:1.4;color:var(--ink-2);display:flex;flex-direction:column;gap:.25rem}
+.riskcol li .k{font-weight:700;color:var(--ink)}
+
+/* ---------- nav / chrome ---------- */
+.progress{position:fixed;top:0;left:0;height:3px;background:linear-gradient(90deg,var(--blue),var(--s2));z-index:50;transition:width .5s cubic-bezier(.4,0,.2,1)}
+.nav{position:fixed;bottom:1.4vh;right:2vw;z-index:50;display:flex;align-items:center;gap:.7rem;background:rgba(255,255,255,.9);backdrop-filter:blur(8px);border:1px solid var(--line);border-radius:30px;padding:.35rem .5rem;box-shadow:var(--shadow)}
+.slide.dark ~ .nav,body.on-dark .nav{background:rgba(12,32,54,.7);border-color:rgba(255,255,255,.15)}
+.navbtn{width:2rem;height:2rem;border:none;border-radius:50%;background:var(--navy);color:#fff;cursor:pointer;font-size:1rem;display:flex;align-items:center;justify-content:center;transition:transform .15s,background .15s}
+.navbtn:hover{transform:scale(1.08);background:var(--navy-3)}
+.navbtn:disabled{opacity:.32;cursor:default;transform:none}
+.counter{font-size:.78rem;font-weight:700;color:var(--ink-2);min-width:3.2rem;text-align:center;font-variant-numeric:tabular-nums}
+body.on-dark .counter{color:#cfe0f7}
+.dots{position:fixed;left:2vw;top:50%;transform:translateY(-50%);z-index:50;display:flex;flex-direction:column;gap:.6rem}
+.dot{width:9px;height:9px;border-radius:50%;background:var(--faint);border:none;cursor:pointer;padding:0;transition:all .2s;position:relative}
+.dot:hover{transform:scale(1.3)}
+.dot.on{background:var(--navy);height:22px;border-radius:5px}
+body.on-dark .dot{background:rgba(255,255,255,.3)} body.on-dark .dot.on{background:#fff}
+.dot .tip{position:absolute;left:18px;top:50%;transform:translateY(-50%);white-space:nowrap;background:var(--navy);color:#fff;font-size:.68rem;font-weight:600;padding:.25rem .55rem;border-radius:5px;opacity:0;pointer-events:none;transition:opacity .15s}
+.dot:hover .tip{opacity:1}
+.hint{position:fixed;bottom:1.6vh;left:50%;transform:translateX(-50%);z-index:50;font-size:.72rem;color:var(--muted);letter-spacing:.05em;opacity:.8;transition:opacity .4s}
+body.on-dark .hint{color:#7f9bb8}
+.hint.hide{opacity:0}
+.hint kbd{font-family:var(--sans);background:var(--card);border:1px solid var(--line);border-bottom-width:2px;border-radius:4px;padding:.05rem .35rem;font-size:.7rem;font-weight:700;color:var(--ink-2)}
+body.on-dark .hint kbd{background:rgba(255,255,255,.1);border-color:rgba(255,255,255,.2);color:#cfe0f7}
+
+/* tooltip */
+.tt{position:fixed;z-index:80;pointer-events:none;background:var(--navy);color:#fff;padding:.5rem .7rem;border-radius:8px;font-size:.75rem;box-shadow:var(--shadow-lg);opacity:0;transition:opacity .12s;line-height:1.45;max-width:230px}
+.tt .tt-h{font-weight:750;font-size:.72rem;letter-spacing:.02em;margin-bottom:.2rem;color:#8fb4dd}
+.tt .tt-r{display:flex;align-items:center;gap:.4rem;white-space:nowrap}
+.tt .tt-r .sw{width:9px;height:9px;border-radius:2px}
+.tt .tt-r b{margin-left:auto;font-variant-numeric:tabular-nums}
+.tt .tt-sub{margin-top:.28rem;font-size:.66rem;color:#9fb0c4;opacity:.9}
+
+/* chart primitives */
+.grid-line{stroke:var(--line);stroke-width:1}
+.zero-line{stroke:var(--faint);stroke-width:1.5}
+.axis-lbl{fill:var(--muted);font-size:11px;font-weight:600}
+.axis-lbl.x{text-anchor:middle}
+.bar-val{fill:var(--ink);font-size:11px;font-weight:730;text-anchor:middle}
+.bar-val.on-bar{fill:#fff}
+.dot-val{fill:var(--ink);font-size:11px;font-weight:730;text-anchor:middle}
+.series-line{fill:none;stroke-width:2.4;stroke-linejoin:round;stroke-linecap:round}
+.marker{stroke:var(--card);stroke-width:2}
+.hbar{cursor:pointer;transition:opacity .15s}
+.hbar:hover{opacity:.82}
+.reveal .growable{transform:scaleY(0);transform-origin:bottom;transition:transform .8s cubic-bezier(.2,.8,.2,1)}
+.reveal.in .growable{transform:scaleY(1)}
+.reveal .drawable{stroke-dasharray:var(--len);stroke-dashoffset:var(--len);transition:stroke-dashoffset 1.1s ease .2s}
+.reveal.in .drawable{stroke-dashoffset:0}
+.reveal .fadein{opacity:0;transition:opacity .6s ease .5s} .reveal.in .fadein{opacity:1}
+.reveal .popin{opacity:0;transform:scale(.6);transition:opacity .4s,transform .45s cubic-bezier(.2,1.4,.4,1)} .reveal.in .popin{opacity:1;transform:scale(1)}
+@media (max-width:1100px){.htitle{font-size:1.5rem}.kpi-6{grid-template-columns:repeat(3,1fr)}}
+
+/* ---------- Print / PDF export (one slide per landscape page) ---------- */
+@media print{
+  @page{size:1280px 720px;margin:0}
+  html,body{width:1280px;background:#fff}
+  .progress,.dots,.nav,.hint,.tt{display:none!important}
+  .deck{position:static;inset:auto}
+  .slide{position:relative!important;inset:auto!important;width:1280px;height:720px;
+    opacity:1!important;visibility:visible!important;transform:none!important;
+    overflow:hidden;page-break-after:always;break-after:page;box-shadow:none}
+  .slide:last-child{page-break-after:auto;break-after:auto}
+  /* freeze all reveal animations at their final state */
+  .reveal .growable{transform:scaleY(1)!important}
+  .reveal .drawable{stroke-dashoffset:0!important}
+  .reveal .fadein,.reveal .popin{opacity:1!important;transform:none!important}
+  .slide,.slide *{transition:none!important;animation:none!important}
+  *{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
+}
+body.printing .slide{position:relative;inset:auto;width:1280px;height:720px;opacity:1;visibility:visible;transform:none}
+body.printing .progress,body.printing .dots,body.printing .nav,body.printing .hint{display:none}
+</style>
+</head>
+<body>
+<div class="progress" id="progress"></div>
+<div class="dots" id="dots"></div>
+<div class="deck" id="deck">
+
+<!-- ================= 01 TITLE ================= -->
+<section class="slide dark title-slide" data-label="Title">
+  <div class="wrap">
+    <div class="brandrow">
+      <div class="brand-mark">P</div>
+      <div>
+        <div class="brand-name">PayJoy</div>
+        <div class="brand-tag">Finance Analyst Case</div>
+      </div>
+    </div>
+    <div class="eyebrow">Strategic Scenario Analysis · Years 6–10</div>
+    <h1 class="big-title">Grow the top line,<br>or grow the <span class="g">bottom line?</span></h1>
+    <p class="subtitle">Two five-year strategies for a mid-sized consumer products company — modeled, stress-tested for liquidity, and compared on the financial evidence.</p>
+    <div class="decision-strip">
+      <div class="dchip">
+        <div class="q">The Decision</div>
+        <div class="a">Which strategy builds the most durable financial profile through Year 10?</div>
+      </div>
+      <div class="dchip v1">
+        <div class="q">Scenario 1 · Aggressive Expansion</div>
+        <div class="a">Market share 15% → 35% through heavy investment</div>
+      </div>
+      <div class="dchip v2">
+        <div class="q">Scenario 2 · Stable Growth &amp; Profitability</div>
+        <div class="a">Steady growth with ≥15% YoY profit expansion</div>
+      </div>
+    </div>
+    <div class="presenter" style="margin-top:26px;font-size:.98rem;color:#8fb4dd;font-weight:600;letter-spacing:.01em">Prepared &amp; presented by <span style="color:#fff;font-weight:700">Juan Camilo Herrera Olano</span></div>
+    <div class="title-foot">Source of truth: case financial model · Figures in USD millions unless noted · Historical Y1–Y5, projections Y6–Y10</div>
+  </div>
+</section>
+
+<!-- ================= 02 HEALTH CHECK ================= -->
+<section class="slide light" data-label="Health Check">
+  <div class="wrap">
+    <div class="shead">
+      <div>
+        <div class="kicker"><span class="step">01</span> Financial Health Check · Historical Y1–Y5</div>
+        <h1 class="htitle">A healthy, cash-generative base — modest growth, stable margins, low leverage</h1>
+      </div>
+      <div class="hmeta"><b>Starting point</b><br>Y5 Revenue <b>$150.0M</b><br>Y5 Cash <b>$46.5M</b></div>
+    </div>
+    <div class="body">
+      <div class="kpi-row kpi-6">
+        <div class="kpi"><div class="lab">Revenue CAGR</div><div class="val">10.7<small>%</small></div><div class="sub">Y1→Y5 · $100M→$150M</div></div>
+        <div class="kpi"><div class="lab">Gross Margin</div><div class="val">~45<small>%</small></div><div class="sub">Stable across 5 yrs</div></div>
+        <div class="kpi"><div class="lab">EBITDA Margin</div><div class="val">~18<small>%</small></div><div class="sub">Consistent quality</div></div>
+        <div class="kpi g"><div class="lab">Cumulative FCF</div><div class="val">+$27.5<small>M</small></div><div class="sub"><b>Positive every year</b></div></div>
+        <div class="kpi t"><div class="lab">Cash Position</div><div class="val">$46.5<small>M</small></div><div class="sub"><b>5.8× growth</b> from $8M</div></div>
+        <div class="kpi"><div class="lab">Leverage (Debt/EBITDA)</div><div class="val">1.3<small>×</small></div><div class="sub">36M debt · easing</div></div>
+      </div>
+      <div class="cols c-2">
+        <div class="panel flush">
+          <div class="p-title">Revenue &amp; EBITDA build steadily <span class="unit">USD millions</span></div>
+          <div class="p-sub">Top line compounds ~10.7%; EBITDA margin holds near 18% — growth is not bought with margin.</div>
+          <div class="chart-holder"><div id="ch-hist" class="reveal"></div></div>
+          <div class="legend">
+            <div class="lg"><span class="sw" style="background:var(--blue)"></span>Revenue</div>
+            <div class="lg"><span class="sw" style="background:var(--navy)"></span>EBITDA</div>
+            <div class="lg"><span class="swl" style="background:var(--s2)"></span>EBITDA margin (%)</div>
+          </div>
+        </div>
+        <div class="insights">
+          <div class="ins pos"><div class="ic">✓</div><div class="tx"><b>Reliable compounder.</b> Revenue grew every year at a ~10.7% CAGR with gross margin anchored at ~45% — a stable, predictable core.</div></div>
+          <div class="ins pos"><div class="ic">✓</div><div class="tx"><b>Self-funding today.</b> Free cash flow was positive in all four measured years (+$27.5M cumulative), and cash climbed from $8M to $46.5M.</div></div>
+          <div class="ins pos"><div class="ic">✓</div><div class="tx"><b>Conservatively financed.</b> Total debt of $36M against $27M EBITDA — leverage of just <b style="color:var(--ink)">1.3×</b>, easing over time.</div></div>
+          <div class="ins cau"><div class="ic">!</div><div class="tx"><b>But capacity is finite.</b> A ~$47M cash buffer and low FCF base can absorb a step-change in investment only so far — the key question for Scenario 1.</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= 03 STRATEGIC CHOICE ================= -->
+<section class="slide light" data-label="The Choice">
+  <div class="wrap">
+    <div class="shead">
+      <div>
+        <div class="kicker"><span class="step">02</span> The Strategic Choice</div>
+        <h1 class="htitle">Two credible paths for Years 6–10 — with very different financial DNA</h1>
+      </div>
+      <div class="hmeta"><b>Same starting point</b><br>$150M revenue<br>$46.5M cash · 1.3× levered</div>
+    </div>
+    <div class="body">
+      <div class="flowbar">
+        <span class="node hl">Historical baseline</span><span class="arr">→</span>
+        <span class="node">Two strategic paths</span><span class="arr">→</span>
+        <span class="node">Model &amp; stress-test</span><span class="arr">→</span>
+        <span class="node">Compare consequences</span><span class="arr">→</span>
+        <span class="node">Recommend</span>
+      </div>
+      <div class="paths">
+        <div class="path p1">
+          <span class="tag">Scenario 1</span>
+          <h3>Aggressive Market Expansion</h3>
+          <div class="lede">Capture share in a ~$1B market — from 15% to 35% by Year 10 — through heavy marketing and capacity investment.</div>
+          <ul>
+            <li><span class="b">↑</span><span>Market share <b>15% → 35%</b> → revenue nearly <b>3×</b> to ~$438M</span></li>
+            <li><span class="b">↑</span><span>Marketing steps up to <b>22% of revenue</b>; CapEx to <b>8%</b></span></li>
+            <li><span class="b">=</span><span>Gross margin held at 45% — <b>no efficiency gain</b></span></li>
+          </ul>
+          <div class="foot-metric">
+            <div class="fm"><div class="v">~$438M</div><div class="l">Y10 Revenue</div></div>
+            <div class="fm"><div class="v">24%</div><div class="l">Revenue CAGR</div></div>
+          </div>
+        </div>
+        <div class="path p2">
+          <span class="tag">Scenario 2</span>
+          <h3>Stable Growth &amp; Profitability</h3>
+          <div class="lede">Maintain the historical ~10% growth trajectory while driving profitability up by at least 15% YoY through cost efficiency.</div>
+          <ul>
+            <li><span class="b">↑</span><span>Revenue grows a steady <b>10%/yr</b> → ~$242M</span></li>
+            <li><span class="b">↑</span><span>Net income compounds <b>≥15% YoY</b> → $27M (2×)</span></li>
+            <li><span class="b">↑</span><span>Efficiency lifts EBITDA margin <b>18% → 19.6%</b></span></li>
+          </ul>
+          <div class="foot-metric">
+            <div class="fm"><div class="v">~$242M</div><div class="l">Y10 Revenue</div></div>
+            <div class="fm"><div class="v">+15%</div><div class="l">Net Income YoY</div></div>
+          </div>
+        </div>
+        <div class="vs">VS</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= 04 SCENARIO 1 CASH BURN ================= -->
+<section class="slide light" data-label="S1 · Cash Burn">
+  <div class="wrap">
+    <div class="shead">
+      <div>
+        <div class="kicker" style="color:var(--s1-ink)"><span class="step" style="background:var(--s1)">03</span> Scenario 1 · Modeled without additional debt</div>
+        <h1 class="htitle">Accelerating growth creates a large cash requirement — <span class="warn">liquidity runs out in Year 9</span></h1>
+      </div>
+      <div class="hmeta"><b>No-financing case</b><br>Cumulative FCF <b style="color:var(--crit)">−$77.2M</b><br>Y10 cash <b style="color:var(--crit)">−$30.7M</b></div>
+    </div>
+    <div class="body">
+      <div class="cols c-2">
+        <div class="panel flush">
+          <div class="p-title">Revenue soars, but cash falls through zero <span class="unit">USD millions</span></div>
+          <div class="p-sub">We first model the strategy with no new financing to expose its true cash intensity. Every forecast year burns cash.</div>
+          <div class="chart-holder"><div id="ch-s1cash" class="reveal"></div></div>
+          <div class="legend">
+            <div class="lg"><span class="sw" style="background:var(--s1)"></span>Revenue</div>
+            <div class="lg"><span class="swl" style="background:var(--navy)"></span>Ending cash (no new debt)</div>
+            <div class="lg"><span class="sw" style="background:var(--crit)"></span>Cash below zero</div>
+          </div>
+        </div>
+        <div class="cols" style="grid-template-columns:1fr;gap:1rem">
+          <div class="kpi-row" style="grid-template-columns:1fr 1fr;gap:.9rem">
+            <div class="kpi o"><div class="lab">Y10 Revenue</div><div class="val">$438<small>M</small></div><div class="sub">from $150M · <b>24% CAGR</b></div></div>
+            <div class="kpi o"><div class="lab">Y10 EBITDA margin</div><div class="val">8.3<small>%</small></div><div class="sub"><b class="dn">vs 18% today</b></div></div>
+            <div class="kpi"><div class="lab">CapEx (Y6–Y10)</div><div class="val">$126<small>M</small></div><div class="sub">8% of revenue</div></div>
+            <div class="kpi"><div class="lab">Marketing (Y6–Y10)</div><div class="val">$345<small>M</small></div><div class="sub">22% of revenue</div></div>
+          </div>
+          <div class="panel flush" style="flex:1">
+            <div class="p-title">Free cash flow is negative every year <span class="unit">USD millions</span></div>
+            <div class="chart-holder"><div id="ch-s1fcf" class="reveal"></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= 05 FINANCING BRIDGE ================= -->
+<section class="slide light" data-label="S1 · Financing">
+  <div class="wrap">
+    <div class="shead">
+      <div>
+        <div class="kicker" style="color:var(--s1-ink)"><span class="step" style="background:var(--s1)">04</span> Scenario 1 · Sizing the financing requirement</div>
+        <h1 class="htitle">The shortfall defines the raise — <span class="warn">~$50M of new debt to hold a $10M cash floor</span></h1>
+      </div>
+      <div class="hmeta"><b>Derived from the no-debt case</b><br>Min cash policy <b>$10.0M</b><br>Debt raised in <b>Year 8</b></div>
+    </div>
+    <div class="body">
+      <div class="cols c-2b">
+        <div class="panel flush">
+          <div class="p-title">From liquidity shortfall to required debt <span class="unit">USD millions</span></div>
+          <div class="p-sub">Bridge the deepest cash deficit up to a $10M buffer, then gross up for the interest the new debt itself creates.</div>
+          <div class="chart-holder"><div id="ch-bridge" class="reveal"></div></div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:1rem;min-height:0">
+          <div class="kpi-row" style="grid-template-columns:1fr 1fr;gap:.9rem">
+            <div class="kpi o"><div class="lab">Additional debt required</div><div class="val">$50.1<small>M</small></div><div class="sub">raised in Year 8</div></div>
+            <div class="kpi o"><div class="lab">Total debt after</div><div class="val">$86.1<small>M</small></div><div class="sub"><b class="dn">from $36M · +139%</b></div></div>
+            <div class="kpi o"><div class="lab">Annual interest</div><div class="val">$3.0→7.2<small>M</small></div><div class="sub"><b class="dn">+$4.2M / yr</b></div></div>
+            <div class="kpi t"><div class="lab">Y10 ending cash</div><div class="val">$10.0<small>M</small></div><div class="sub">exactly at the floor</div></div>
+          </div>
+          <div class="panel flush" style="flex:1">
+            <div class="p-title">The derivation, step by step</div>
+            <div class="insights" style="margin-top:.6rem">
+              <div class="ins cau"><div class="ic">1</div><div class="tx">The no-debt case ends Year 10 with cash at <b>−$30.7M</b> — the ending cash shortfall (not a cumulative-FCF figure). <span class="tagchip deriv">Derived</span></div></div>
+              <div class="ins cau"><div class="ic">2</div><div class="tx">Restore to zero <b>(+$30.7M)</b> and add the <b>$10M</b> minimum-cash buffer → <b>$40.7M</b> needed. <span class="tagchip model">Modeling</span></div></div>
+              <div class="ins cau"><div class="ic">3</div><div class="tx">Gross up for the after-tax interest the new debt itself creates (8.3% cost, 3 yrs) → <b>$50.1M</b> raise; after-tax interest cash impact <b>$9.4M</b>. <span class="tagchip deriv">Derived</span></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= 06 SCENARIO 2 ================= -->
+<section class="slide light" data-label="S2 · Profitability">
+  <div class="wrap">
+    <div class="shead">
+      <div>
+        <div class="kicker" style="color:var(--s2-ink)"><span class="step" style="background:var(--s2)">05</span> Scenario 2 · Stable growth &amp; profitability</div>
+        <h1 class="htitle">Profitability discipline lets growth <span class="accent">fund itself</span> — no new financing needed</h1>
+      </div>
+      <div class="hmeta"><b>Self-funded plan</b><br>Cumulative FCF <b style="color:var(--good)">+$66.2M</b><br>Y10 cash <b style="color:var(--good)">$112.7M</b></div>
+    </div>
+    <div class="body">
+      <div class="kpi-row" style="grid-template-columns:repeat(5,1fr);gap:.9rem">
+        <div class="kpi t"><div class="lab">Y10 Revenue</div><div class="val">$242<small>M</small></div><div class="sub">steady 10%/yr</div></div>
+        <div class="kpi g"><div class="lab">Y10 Net Income</div><div class="val">$27.2<small>M</small></div><div class="sub"><b>+15% YoY, 2×</b></div></div>
+        <div class="kpi t"><div class="lab">Y10 EBITDA margin</div><div class="val">19.6<small>%</small></div><div class="sub"><b>up from 18%</b></div></div>
+        <div class="kpi g"><div class="lab">Cumulative FCF</div><div class="val">+$66<small>M</small></div><div class="sub"><b>positive all years</b></div></div>
+        <div class="kpi t"><div class="lab">Additional debt</div><div class="val">$0</div><div class="sub">stays at $36M</div></div>
+      </div>
+      <div class="cols c-2b">
+        <div class="panel flush">
+          <div class="p-title">Net income compounds at ≥15% YoY <span class="unit">USD millions</span></div>
+          <div class="p-sub">Cost efficiency is engineered to exactly meet the profitability target every year.</div>
+          <div class="chart-holder"><div id="ch-s2ni" class="reveal"></div></div>
+          <div class="legend">
+            <div class="lg"><span class="sw" style="background:var(--s2)"></span>Net income</div>
+            <div class="lg"><span class="swl" style="background:var(--navy);border-radius:2px"></span>≥15% YoY target</div>
+          </div>
+        </div>
+        <div class="panel flush">
+          <div class="p-title">Positive FCF compounds cash to $113M <span class="unit">USD millions</span></div>
+          <div class="p-sub">Every forecast year generates cash; the balance more than doubles with zero new debt.</div>
+          <div class="chart-holder"><div id="ch-s2cash" class="reveal"></div></div>
+          <div class="legend">
+            <div class="lg"><span class="sw" style="background:var(--s2)"></span>Free cash flow</div>
+            <div class="lg"><span class="swl" style="background:var(--navy)"></span>Ending cash</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= 07 HEAD TO HEAD ================= -->
+<section class="slide light" data-label="Head-to-Head">
+  <div class="wrap">
+    <div class="shead">
+      <div>
+        <div class="kicker"><span class="step">06</span> Head-to-Head · Year 10 Outcomes</div>
+        <h1 class="htitle">Higher revenue, lower everything else — <span class="accent">Scenario 2 wins where it counts</span></h1>
+      </div>
+      <div class="hmeta"><b>Scenario 1</b> = financed case<br>All figures Year 10 unless noted</div>
+    </div>
+    <div class="body">
+      <div class="cols c-2">
+        <div class="panel flush">
+          <div class="p-title">Revenue vs. what revenue produces <span class="unit">USD millions · Year 10</span></div>
+          <div class="p-sub">Scenario 1 leads on revenue alone. On EBITDA and net income — the profit the business keeps — Scenario 2 is materially ahead.</div>
+          <div class="chart-holder"><div id="ch-cmp" class="reveal"></div></div>
+          <div class="legend">
+            <div class="lg"><span class="sw" style="background:var(--s1)"></span>Scenario 1 · Aggressive</div>
+            <div class="lg"><span class="sw" style="background:var(--s2)"></span>Scenario 2 · Stable + Profit</div>
+          </div>
+        </div>
+        <div class="panel">
+          <div class="p-title" style="margin-bottom:.4rem">Decision-relevant metrics</div>
+          <table class="cmp">
+            <thead><tr><th>Metric</th><th class="h1">Scenario 1</th><th class="h2 badge-col">Scenario 2</th></tr></thead>
+            <tbody>
+              <tr><td class="metric">Y10 Revenue</td><td class="v v1">$438M</td><td class="v v2 badge-col">$242M</td></tr>
+              <tr><td class="metric">Y10 EBITDA</td><td class="v v1">$36.5M</td><td class="v v2 badge-col">$47.3M <span class="win">✓</span></td></tr>
+              <tr><td class="metric">EBITDA margin</td><td class="v v1">8.3%</td><td class="v v2 badge-col">19.6% <span class="win">✓</span></td></tr>
+              <tr><td class="metric">Y10 Net income</td><td class="v v1">$12.3M</td><td class="v v2 badge-col">$27.2M <span class="win">✓</span></td></tr>
+              <tr><td class="metric">Net income vs. Y5</td><td class="v v1">−9%</td><td class="v v2 badge-col">+101% <span class="win">✓</span></td></tr>
+              <tr><td class="metric">Cumulative FCF (Y6–10)</td><td class="v v1">−$86.6M</td><td class="v v2 badge-col">+$66.2M <span class="win">✓</span></td></tr>
+              <tr><td class="metric">Y10 Ending cash</td><td class="v v1">$10.0M</td><td class="v v2 badge-col">$112.7M <span class="win">✓</span></td></tr>
+              <tr><td class="metric">Total debt</td><td class="v v1">$86.1M</td><td class="v v2 badge-col">$36.0M <span class="win">✓</span></td></tr>
+              <tr><td class="metric">Additional financing</td><td class="v v1">$50.1M</td><td class="v v2 badge-col">$0 <span class="win">✓</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= 08 RECOMMENDATION ================= -->
+<section class="slide dark" data-label="Recommendation">
+  <div class="wrap" style="justify-content:center">
+    <div class="rec-hero">
+      <div class="verdict">Recommendation</div>
+      <h2>Pursue <span class="g">Scenario 2</span> — stable growth with profitability expansion</h2>
+      <p>It satisfies the case's ≥15% profitability mandate while producing a stronger, self-funding balance sheet — more profit, more cash, and less risk than the aggressive path, on the model's own numbers.</p>
+    </div>
+    <div class="reasons">
+      <div class="reason">
+        <div class="rn">01 · Profitability</div>
+        <div class="rv">$27.2M</div>
+        <div class="rl">Y10 net income — <b>2×</b> today and <b>2.2×</b> Scenario 1</div>
+        <div class="rc">Meets <b class="up">≥15% YoY</b> mandate every year</div>
+      </div>
+      <div class="reason">
+        <div class="rn">02 · Cash generation</div>
+        <div class="rv">+$66M</div>
+        <div class="rl">Cumulative free cash flow, positive in every year</div>
+        <div class="rc">Scenario 1: <b class="dn">−$87M</b> cash burn</div>
+      </div>
+      <div class="reason">
+        <div class="rn">03 · Liquidity</div>
+        <div class="rv">$113M</div>
+        <div class="rl">Y10 cash — accumulates instead of depleting</div>
+        <div class="rc">Scenario 1 needs a raise to hold <b class="dn">$10M</b></div>
+      </div>
+      <div class="reason">
+        <div class="rn">04 · Leverage</div>
+        <div class="rv">$0</div>
+        <div class="rl">New debt required — leverage stays at $36M</div>
+        <div class="rc">Scenario 1 adds <b class="dn">$50M</b> → $86M total</div>
+      </div>
+    </div>
+    <p style="text-align:center;margin-top:1.6rem;font-size:.86rem;color:#8fb4dd;max-width:74ch;margin-left:auto;margin-right:auto;line-height:1.5">
+      Scenario 1 delivers higher revenue, but on an unchanged cost structure it produces <b style="color:#f0a583">lower</b> EBITDA and net income than Scenario 2 while consuming cash and forcing a debt raise. Growth that erodes profitability and liquidity is not a stronger business.
+    </p>
+  </div>
+</section>
+
+<!-- ================= 09 ASSUMPTIONS & RISKS ================= -->
+<section class="slide light" data-label="Assumptions">
+  <div class="wrap">
+    <div class="shead">
+      <div>
+        <div class="kicker"><span class="step">07</span> Assumptions &amp; Risks · Transparency</div>
+        <h1 class="htitle">What the case gave us, what we assumed, and what to watch</h1>
+      </div>
+      <div class="hmeta"><b>Every figure</b> traces to the model<br>Balance sheet ties out in all years</div>
+    </div>
+    <div class="body">
+      <div class="risk-grid">
+        <div class="riskcol">
+          <h4><span class="tagchip case">Case-provided</span></h4>
+          <div class="cd">Stated in the brief — treated as fixed inputs</div>
+          <ul>
+            <li><span class="k">Market share 15% → 35% by Year 10</span>The Scenario 1 target</li>
+            <li><span class="k">≥15% YoY profitability growth</span>The Scenario 2 mandate</li>
+            <li><span class="k">Historical statements Y1–Y5</span>P&amp;L, cash flow, balance sheet</li>
+            <li><span class="k">~10% revenue CAGR, ~45% GM</span>Described starting profile</li>
+          </ul>
+        </div>
+        <div class="riskcol">
+          <h4><span class="tagchip model">Modeling</span></h4>
+          <div class="cd">Our assumptions to operationalize the case</div>
+          <ul>
+            <li><span class="k">Profitability = Net income</span>Chosen definition of the 15% target</li>
+            <li><span class="k">+4 ppt/yr linear share ramp</span>Straight-line path chosen to the 15%→35% target</li>
+            <li><span class="k">Marketing 22% / CapEx 8% of rev</span>Scenario 1 investment intensity</li>
+            <li><span class="k">Efficiency split 60% COGS / 40% G&amp;A</span>How Scenario 2 hits its profit target</li>
+            <li><span class="k">$10M minimum cash floor; debt raised Y8</span>Financing policy &amp; timing</li>
+          </ul>
+        </div>
+        <div class="riskcol">
+          <h4><span class="tagchip deriv">Sensitivities &amp; risks</span></h4>
+          <div class="cd">Where the conclusion could move</div>
+          <ul>
+            <li><span class="k">Cost of debt (8.3%)</span>Higher rates deepen Scenario 1's interest drag</li>
+            <li><span class="k">Scenario 2 efficiency delivery</span>Profit target relies on realizing cost savings</li>
+            <li><span class="k">Market growth (4.6%) &amp; share gains</span>Scenario 1 revenue is share-dependent</li>
+            <li><span class="k">Working capital ratios</span>Held at historical levels in both plans</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+</div><!--/deck-->
+
+<div class="hint" id="hint">Use <kbd>←</kbd> <kbd>→</kbd> to navigate · <kbd>F</kbd> fullscreen</div>
+<div class="nav">
+  <button class="navbtn" id="prevBtn" aria-label="Previous">‹</button>
+  <div class="counter" id="counter">01 / 09</div>
+  <button class="navbtn" id="nextBtn" aria-label="Next">›</button>
+</div>
+<div class="tt" id="tt"></div>
+
+<script>
+/* ============ MODEL DATA (USD millions; source: case Excel) ============ */
+const YH=['Y1','Y2','Y3','Y4','Y5'], YF=['Y6','Y7','Y8','Y9','Y10'];
+const D={
+  hist:{rev:[100,112,125,138,150],ebitda:[18,19,22,25,27],em:[18.0,17.0,17.6,18.1,18.0]},
+  s1:{rev:[198.7,251.6,309.0,371.1,438.3],fcf:[-12.7,-14.0,-15.4,-16.8,-18.3],cash:[33.8,19.8,4.4,-12.4,-30.7]},
+  s2:{ni:[15.5,17.9,20.5,23.6,27.2],tgt:[15.5,17.9,20.5,23.6,27.2],fcf:[9.6,11.0,12.9,15.1,17.6],cash:[56.1,67.2,80.1,95.1,112.7]},
+  cmp:{labels:['Revenue','EBITDA','Net income'],s1:[438.3,36.5,12.3],s2:[241.6,47.3,27.2]}
+};
+const C={blue:'#2a78d6',navy:'#0a2540',s1:'#eb6834',s1ink:'#b64518',s2:'#1baf7a',s2ink:'#0d7a54',crit:'#d03b3b',good:'#0ca30c',line:'#e3e8ef',faint:'#aeb8c4',muted:'#7a8798'};
+const NS='http://www.w3.org/2000/svg';
+function el(t,a){const e=document.createElementNS(NS,t);for(const k in a)e.setAttribute(k,a[k]);return e;}
+function fmt(v,d=1){return (v<0?'−':'')+'$'+Math.abs(v).toFixed(d)+'M';}
+
+/* shared tooltip */
+const tt=document.getElementById('tt');
+function showTT(html,x,y){tt.innerHTML=html;tt.style.opacity=1;const r=tt.getBoundingClientRect();let nx=x+14,ny=y-r.height-8;if(nx+r.width>innerWidth-8)nx=x-r.width-14;if(ny<8)ny=y+16;tt.style.left=nx+'px';tt.style.top=ny+'px';}
+function hideTT(){tt.style.opacity=0;}
+function bindTT(node,html){node.addEventListener('mousemove',e=>showTT(html,e.clientX,e.clientY));node.addEventListener('mouseleave',hideTT);}
+
+/* generic scaler */
+function makeSVG(host,w=680,h=380){host.innerHTML='';const s=el('svg',{class:'chart',viewBox:`0 0 ${w} ${h}`,preserveAspectRatio:'xMidYMid meet'});host.appendChild(s);return s;}
+
+/* ---------- CHART: historical revenue+ebitda bars + margin line ---------- */
+function chHist(){
+  const host=document.getElementById('ch-hist');const W=680,H=360,s=makeSVG(host,W,H);
+  const m={t:24,r:16,b:34,l:44},pw=W-m.l-m.r,ph=H-m.t-m.b;
+  const max=160, y=v=>m.t+ph-(v/max)*ph;
+  for(let g=0;g<=160;g+=40){const yy=y(g);s.appendChild(el('line',{x1:m.l,y1:yy,x2:m.l+pw,y2:yy,class:'grid-line'}));const t=el('text',{x:m.l-8,y:yy+4,class:'axis-lbl',style:'text-anchor:end'});t.textContent='$'+g;s.appendChild(t);}
+  const n=5,gw=pw/n,bw=gw*0.30;
+  D.hist.rev.forEach((rv,i)=>{
+    const cx=m.l+gw*i+gw/2, eb=D.hist.ebitda[i];
+    const x1=cx-bw-2, x2=cx+2;
+    const rvH=(rv/max)*ph, ebH=(eb/max)*ph;
+    const b1=el('rect',{x:x1,y:y(rv),width:bw,height:rvH,rx:3,fill:C.blue,class:'growable hbar'});s.appendChild(b1);
+    bindTT(b1,`<div class="tt-h">${YH[i]}</div><div class="tt-r"><span class="sw" style="background:${C.blue}"></span>Revenue<b>${fmt(rv,0)}</b></div>`);
+    const b2=el('rect',{x:x2,y:y(eb),width:bw,height:ebH,rx:3,fill:C.navy,class:'growable hbar'});s.appendChild(b2);
+    bindTT(b2,`<div class="tt-h">${YH[i]}</div><div class="tt-r"><span class="sw" style="background:${C.navy}"></span>EBITDA<b>${fmt(eb,0)}</b></div><div class="tt-r"><span class="sw" style="background:${C.s2}"></span>Margin<b>${D.hist.em[i].toFixed(1)}%</b></div>`);
+    const xl=el('text',{x:cx,y:H-14,class:'axis-lbl x'});xl.textContent=YH[i];s.appendChild(xl);
+  });
+  // margin line on same panel (indexed to right visual via secondary scale but drawn subtly) -> use its own scale mapped to top band
+  const my=v=>m.t+ph-(v/30)*ph*0.9; // margin 0..30% mapped
+  let pts=D.hist.em.map((v,i)=>[m.l+gw*i+gw/2,my(v)]);
+  let dstr='M'+pts.map(p=>p.join(',')).join(' L');
+  const len=1200;const ln=el('path',{d:dstr,class:'series-line drawable',stroke:C.s2,style:`--len:${len}`});s.appendChild(ln);
+  pts.forEach((p,i)=>{const c=el('circle',{cx:p[0],cy:p[1],r:4,fill:C.s2,class:'marker fadein'});s.appendChild(c);
+    const t=el('text',{x:p[0],y:p[1]-9,class:'dot-val fadein',style:`fill:${C.s2}`});t.textContent=D.hist.em[i].toFixed(0)+'%';s.appendChild(t);});
+}
+
+/* ---------- CHART: S1 revenue bars + cash line crossing zero ---------- */
+function chS1Cash(){
+  const host=document.getElementById('ch-s1cash');const W=680,H=360,s=makeSVG(host,W,H);
+  const m={t:26,r:16,b:34,l:46},pw=W-m.l-m.r,ph=H-m.t-m.b;
+  const max=460,min=-60,rng=max-min, y=v=>m.t+ph-((v-min)/rng)*ph;
+  [ -60,0,120,240,360,460].forEach(g=>{const yy=y(g);s.appendChild(el('line',{x1:m.l,y1:yy,x2:m.l+pw,y2:yy,class:g===0?'zero-line':'grid-line'}));const t=el('text',{x:m.l-8,y:yy+4,class:'axis-lbl',style:'text-anchor:end'});t.textContent=(g<0?'−$'+Math.abs(g):'$'+g);s.appendChild(t);});
+  const n=5,gw=pw/n,bw=gw*0.34;
+  D.s1.rev.forEach((rv,i)=>{const cx=m.l+gw*i+gw/2;const b=el('rect',{x:cx-bw/2,y:y(rv),width:bw,height:y(0)-y(rv),rx:3,fill:C.s1,opacity:.9,class:'growable hbar'});s.appendChild(b);
+    bindTT(b,`<div class="tt-h">${YF[i]}</div><div class="tt-r"><span class="sw" style="background:${C.s1}"></span>Revenue<b>${fmt(rv,0)}</b></div><div class="tt-r"><span class="sw" style="background:${C.navy}"></span>Cash<b>${fmt(D.s1.cash[i])}</b></div>`);
+    const xl=el('text',{x:cx,y:H-14,class:'axis-lbl x'});xl.textContent=YF[i];s.appendChild(xl);});
+  // cash line
+  let pts=D.s1.cash.map((v,i)=>[m.l+gw*i+gw/2,y(v)]);
+  let dstr='M'+pts.map(p=>p.join(',')).join(' L');
+  const len=1400;const ln=el('path',{d:dstr,class:'series-line drawable',stroke:C.navy,style:`--len:${len}`});s.appendChild(ln);
+  pts.forEach((p,i)=>{const neg=D.s1.cash[i]<0;const c=el('circle',{cx:p[0],cy:p[1],r:4.5,fill:neg?C.crit:C.navy,class:'marker fadein'});s.appendChild(c);
+    const t=el('text',{x:p[0],y:p[1]+(neg?18:-11),class:'dot-val fadein',style:`fill:${neg?C.crit:C.navy}`});t.textContent=fmt(D.s1.cash[i]);s.appendChild(t);});
+  // shortfall marker at Y9
+  const sx=m.l+gw*3+gw/2;const flag=el('text',{x:sx,y:y(0)+34,class:'fadein',style:`fill:${C.crit};font-size:11px;font-weight:800;text-anchor:middle`});flag.textContent='◆ Cash < 0 in Y9';s.appendChild(flag);
+}
+
+/* ---------- CHART: S1 FCF negative bars ---------- */
+function chS1FCF(){
+  const host=document.getElementById('ch-s1fcf');const W=680,H=210,s=makeSVG(host,W,H);
+  const m={t:22,r:12,b:26,l:44},pw=W-m.l-m.r,ph=H-m.t-m.b;
+  const min=-22,max=2,rng=max-min,y=v=>m.t+ph-((v-min)/rng)*ph;
+  [0,-10,-20].forEach(g=>{const yy=y(g);s.appendChild(el('line',{x1:m.l,y1:yy,x2:m.l+pw,y2:yy,class:g===0?'zero-line':'grid-line'}));const t=el('text',{x:m.l-8,y:yy+4,class:'axis-lbl',style:'text-anchor:end'});t.textContent=(g<0?'−$'+Math.abs(g):'$'+g);s.appendChild(t);});
+  const n=5,gw=pw/n,bw=gw*0.44;
+  D.s1.fcf.forEach((v,i)=>{const cx=m.l+gw*i+gw/2;const top=y(0),bot=y(v);const b=el('rect',{x:cx-bw/2,y:top,width:bw,height:bot-top,rx:3,fill:C.crit,opacity:.88,class:'growable hbar',style:'transform-origin:top'});s.appendChild(b);
+    bindTT(b,`<div class="tt-h">${YF[i]}</div><div class="tt-r"><span class="sw" style="background:${C.crit}"></span>FCF<b>${fmt(v)}</b></div>`);
+    const t=el('text',{x:cx,y:bot+14,class:'dot-val',style:`fill:${C.crit}`});t.textContent=fmt(v);s.appendChild(t);
+    const xl=el('text',{x:cx,y:top-6,class:'axis-lbl x'});xl.textContent=YF[i];s.appendChild(xl);});
+}
+
+/* ---------- CHART: financing bridge (waterfall) ---------- */
+function chBridge(){
+  const host=document.getElementById('ch-bridge');const W=680,H=360,s=makeSVG(host,W,H);
+  const m={t:34,r:16,b:52,l:46},pw=W-m.l-m.r,ph=H-m.t-m.b;
+  // Clean cumulative bridge: build the required debt from $0 up to $50.1M.
+  // Each floating step sits on top of the running total; the final bar is the total.
+  const steps=[
+    {l:'Cover cash deficit',v:30.7,type:'up',col:C.s1,  tip:'Fills the −$30.7M Year-10 ending cash shortfall'},
+    {l:'+ $10M buffer',     v:10.0,type:'up',col:C.s1,  tip:'Minimum cash floor policy'},
+    {l:'+ Interest gross-up',v:9.4,type:'up',col:C.s1,  tip:'After-tax interest cash impact, 3 yrs (÷0.8125)'},
+    {l:'Debt raised · Y8',  v:50.1,type:'total',col:C.navy,tip:'Total long-term debt raised'}
+  ];
+  const max=56, y=v=>m.t+ph-((v)/max)*ph, y0=y(0);
+  [0,20,40,50].forEach(g=>{const yy=y(g);s.appendChild(el('line',{x1:m.l,y1:yy,x2:m.l+pw,y2:yy,class:'grid-line'}));const t=el('text',{x:m.l-8,y:yy+4,class:'axis-lbl',style:'text-anchor:end'});t.textContent='$'+g;s.appendChild(t);});
+  const n=steps.length,gw=pw/n,bw=gw*0.5;let cum=0;
+  steps.forEach((st,i)=>{const cx=m.l+gw*i+gw/2;let top,bot,base;
+    if(st.type==='up'){base=cum;cum+=st.v;top=y(cum);bot=y(base);}
+    else{base=0;cum=st.v;top=y(st.v);bot=y0;}
+    // connector from previous bar top to this bar's base level (drawn before the bar)
+    if(i>0){const px=m.l+gw*(i-1)+gw/2+bw/2;const yLevel=(st.type==='total')?y0:y(base);
+      s.appendChild(el('line',{x1:px,y1:yLevel,x2:cx-bw/2,y2:yLevel,stroke:C.faint,'stroke-width':1,'stroke-dasharray':'3 3',class:'fadein'}));}
+    const b=el('rect',{x:cx-bw/2,y:top,width:bw,height:Math.max(bot-top,2),rx:3,fill:st.col,opacity:st.type==='total'?1:.9,class:'growable hbar',style:'transform-origin:bottom'});s.appendChild(b);
+    bindTT(b,`<div class="tt-h">${st.l}</div><div class="tt-r"><span class="sw" style="background:${st.col}"></span>${st.type==='total'?'Required debt':'Amount'}<b>$${st.v.toFixed(1)}M</b></div><div class="tt-sub">${st.tip}</div>`);
+    const t=el('text',{x:cx,y:top-8,class:'dot-val',style:`fill:${st.type==='total'?C.navy:C.s1ink}`});t.textContent=(st.type==='total'?'$':'+$')+st.v.toFixed(1)+'M';s.appendChild(t);
+    const xl=el('text',{x:cx,y:H-30,class:'axis-lbl x',style:'font-size:10px'});
+    st.l.split(' ').forEach((w,j)=>{const tx=el('tspan',{x:cx,dy:j===0?0:12});tx.textContent=w;xl.appendChild(tx);});
+    s.appendChild(xl);
+  });
+}
+
+/* ---------- CHART: S2 net income bars + target line ---------- */
+function chS2NI(){
+  const host=document.getElementById('ch-s2ni');const W=680,H=320,s=makeSVG(host,W,H);
+  const m={t:26,r:16,b:34,l:44},pw=W-m.l-m.r,ph=H-m.t-m.b;
+  const max=30,y=v=>m.t+ph-(v/max)*ph;
+  [0,10,20,30].forEach(g=>{const yy=y(g);s.appendChild(el('line',{x1:m.l,y1:yy,x2:m.l+pw,y2:yy,class:'grid-line'}));const t=el('text',{x:m.l-8,y:yy+4,class:'axis-lbl',style:'text-anchor:end'});t.textContent='$'+g;s.appendChild(t);});
+  const n=5,gw=pw/n,bw=gw*0.44;
+  D.s2.ni.forEach((v,i)=>{const cx=m.l+gw*i+gw/2;const b=el('rect',{x:cx-bw/2,y:y(v),width:bw,height:y(0)-y(v),rx:3,fill:C.s2,class:'growable hbar'});s.appendChild(b);
+    const g=i===0?15.0:((D.s2.ni[i]/D.s2.ni[i-1]-1)*100);
+    bindTT(b,`<div class="tt-h">${YF[i]}</div><div class="tt-r"><span class="sw" style="background:${C.s2}"></span>Net income<b>${fmt(v)}</b></div><div class="tt-r"><span class="sw" style="background:${C.good}"></span>YoY<b>+15%</b></div>`);
+    const t=el('text',{x:cx,y:y(v)-8,class:'dot-val',style:`fill:${C.s2ink}`});t.textContent=fmt(v);s.appendChild(t);
+    const xl=el('text',{x:cx,y:H-14,class:'axis-lbl x'});xl.textContent=YF[i];s.appendChild(xl);});
+  let pts=D.s2.tgt.map((v,i)=>[m.l+gw*i+gw/2,y(v)]);
+  let dstr='M'+pts.map(p=>p.join(',')).join(' L');
+  const len=1200;s.appendChild(el('path',{d:dstr,class:'series-line drawable',stroke:C.navy,'stroke-dasharray':'6 5',style:`--len:${len};stroke-width:2`}));
+}
+
+/* ---------- CHART: S2 fcf bars + cash line ---------- */
+function chS2Cash(){
+  const host=document.getElementById('ch-s2cash');const W=680,H=320,s=makeSVG(host,W,H);
+  const m={t:26,r:16,b:34,l:46},pw=W-m.l-m.r,ph=H-m.t-m.b;
+  const max=120,y=v=>m.t+ph-(v/max)*ph;
+  [0,40,80,120].forEach(g=>{const yy=y(g);s.appendChild(el('line',{x1:m.l,y1:yy,x2:m.l+pw,y2:yy,class:'grid-line'}));const t=el('text',{x:m.l-8,y:yy+4,class:'axis-lbl',style:'text-anchor:end'});t.textContent='$'+g;s.appendChild(t);});
+  const n=5,gw=pw/n,bw=gw*0.4;
+  D.s2.fcf.forEach((v,i)=>{const cx=m.l+gw*i+gw/2;const b=el('rect',{x:cx-bw/2,y:y(v),width:bw,height:y(0)-y(v),rx:3,fill:C.s2,opacity:.85,class:'growable hbar'});s.appendChild(b);
+    bindTT(b,`<div class="tt-h">${YF[i]}</div><div class="tt-r"><span class="sw" style="background:${C.s2}"></span>FCF<b>${fmt(v)}</b></div><div class="tt-r"><span class="sw" style="background:${C.navy}"></span>Cash<b>${fmt(D.s2.cash[i])}</b></div>`);
+    const xl=el('text',{x:cx,y:H-14,class:'axis-lbl x'});xl.textContent=YF[i];s.appendChild(xl);});
+  let pts=D.s2.cash.map((v,i)=>[m.l+gw*i+gw/2,y(v)]);
+  let dstr='M'+pts.map(p=>p.join(',')).join(' L');
+  const len=1300;s.appendChild(el('path',{d:dstr,class:'series-line drawable',stroke:C.navy,style:`--len:${len}`}));
+  pts.forEach((p,i)=>{s.appendChild(el('circle',{cx:p[0],cy:p[1],r:4,fill:C.navy,class:'marker fadein'}));
+    const t=el('text',{x:p[0],y:p[1]-10,class:'dot-val fadein',style:`fill:${C.navy}`});t.textContent=fmt(D.s2.cash[i],0);s.appendChild(t);});
+}
+
+/* ---------- CHART: head-to-head grouped bars ---------- */
+function chCmp(){
+  const host=document.getElementById('ch-cmp');const W=680,H=360,s=makeSVG(host,W,H);
+  const m={t:30,r:16,b:44,l:46},pw=W-m.l-m.r,ph=H-m.t-m.b;
+  const max=460,y=v=>m.t+ph-(v/max)*ph;
+  [0,120,240,360,460].forEach(g=>{const yy=y(g);s.appendChild(el('line',{x1:m.l,y1:yy,x2:m.l+pw,y2:yy,class:'grid-line'}));const t=el('text',{x:m.l-8,y:yy+4,class:'axis-lbl',style:'text-anchor:end'});t.textContent='$'+g;s.appendChild(t);});
+  const n=3,gw=pw/n,bw=gw*0.26;
+  D.cmp.labels.forEach((lab,i)=>{const cx=m.l+gw*i+gw/2;const v1=D.cmp.s1[i],v2=D.cmp.s2[i];
+    const b1=el('rect',{x:cx-bw-3,y:y(v1),width:bw,height:y(0)-y(v1),rx:3,fill:C.s1,class:'growable hbar'});s.appendChild(b1);
+    bindTT(b1,`<div class="tt-h">${lab} · Year 10</div><div class="tt-r"><span class="sw" style="background:${C.s1}"></span>Scenario 1<b>${fmt(v1)}</b></div><div class="tt-r"><span class="sw" style="background:${C.s2}"></span>Scenario 2<b>${fmt(v2)}</b></div>`);
+    const b2=el('rect',{x:cx+3,y:y(v2),width:bw,height:y(0)-y(v2),rx:3,fill:C.s2,class:'growable hbar'});s.appendChild(b2);
+    bindTT(b2,`<div class="tt-h">${lab} · Year 10</div><div class="tt-r"><span class="sw" style="background:${C.s1}"></span>Scenario 1<b>${fmt(v1)}</b></div><div class="tt-r"><span class="sw" style="background:${C.s2}"></span>Scenario 2<b>${fmt(v2)}</b></div>`);
+    const t1=el('text',{x:cx-bw/2-3,y:y(v1)-8,class:'dot-val',style:`fill:${C.s1}`});t1.textContent=fmt(v1,0);s.appendChild(t1);
+    const t2=el('text',{x:cx+bw/2+3,y:y(v2)-8,class:'dot-val',style:`fill:${C.s2}`});t2.textContent=fmt(v2,0);s.appendChild(t2);
+    const xl=el('text',{x:cx,y:H-16,class:'axis-lbl x',style:'font-weight:700;fill:var(--ink-2);font-size:12px'});xl.textContent=lab;s.appendChild(xl);});
+}
+
+const RENDER={1:chHist,2:null,3:chS1Cash,4:chBridge,5:()=>{chS2NI();chS2Cash();},6:chCmp};
+// index maps to slide order (0-based below); we key by slide idx
+const chartBySlide={1:chHist,3:[chS1Cash,chS1FCF],4:chBridge,5:[chS2NI,chS2Cash],6:chCmp};
+
+/* ============ NAVIGATION ============ */
+const slides=[...document.querySelectorAll('.slide')];
+const total=slides.length;let cur=0;let rendered={};
+const progress=document.getElementById('progress'),counter=document.getElementById('counter');
+const prevBtn=document.getElementById('prevBtn'),nextBtn=document.getElementById('nextBtn');
+const dotsWrap=document.getElementById('dots'),hint=document.getElementById('hint');
+
+slides.forEach((sl,i)=>{const d=document.createElement('button');d.className='dot';d.innerHTML=`<span class="tip">${sl.dataset.label}</span>`;d.onclick=()=>go(i);dotsWrap.appendChild(d);});
+const dots=[...dotsWrap.children];
+
+function renderCharts(i){
+  if(rendered[i])return;const fn=chartBySlide[i];if(!fn)return;
+  (Array.isArray(fn)?fn:[fn]).forEach(f=>f());rendered[i]=true;
+}
+function go(i){
+  if(i<0||i>=total)return;
+  slides[cur].classList.remove('active','prev');slides[cur].classList.add('prev');
+  const reveals=slides[cur].querySelectorAll('.reveal');reveals.forEach(r=>r.classList.remove('in'));
+  cur=i;
+  const sl=slides[cur];sl.classList.add('active');sl.classList.remove('prev');
+  renderCharts(i);
+  requestAnimationFrame(()=>requestAnimationFrame(()=>sl.querySelectorAll('.reveal').forEach(r=>r.classList.add('in'))));
+  progress.style.width=((i+1)/total*100)+'%';
+  counter.textContent=String(i+1).padStart(2,'0')+' / '+String(total).padStart(2,'0');
+  prevBtn.disabled=i===0;nextBtn.disabled=i===total-1;
+  dots.forEach((d,j)=>d.classList.toggle('on',j===i));
+  document.body.classList.toggle('on-dark',sl.classList.contains('dark'));
+  if(i>0)hint.classList.add('hide');else hint.classList.remove('hide');
+}
+prevBtn.onclick=()=>go(cur-1);nextBtn.onclick=()=>go(cur+1);
+document.addEventListener('keydown',e=>{
+  if(e.key==='ArrowRight'||e.key==='PageDown'||e.key===' '){e.preventDefault();go(cur+1);}
+  else if(e.key==='ArrowLeft'||e.key==='PageUp'){e.preventDefault();go(cur-1);}
+  else if(e.key==='Home')go(0);else if(e.key==='End')go(total-1);
+  else if(e.key.toLowerCase()==='f'){if(!document.fullscreenElement)document.documentElement.requestFullscreen();else document.exitFullscreen();}
+});
+// touch
+let tx=0;document.addEventListener('touchstart',e=>tx=e.touches[0].clientX,{passive:true});
+document.addEventListener('touchend',e=>{const dx=e.changedTouches[0].clientX-tx;if(Math.abs(dx)>60)go(cur+(dx<0?1:-1));},{passive:true});
+const startAt=parseInt((location.hash.match(/\d+/)||[1])[0],10)||1;
+go(Math.min(Math.max(startAt-1,0),total-1));
+
+/* ---------- Print / PDF mode: ?print renders every slide + chart statically ---------- */
+function enterPrintMode(){
+  document.body.classList.add('printing');
+  slides.forEach((sl,i)=>{
+    sl.classList.remove('prev');sl.classList.add('active');
+    renderCharts(i);
+    sl.querySelectorAll('.reveal').forEach(r=>r.classList.add('in'));
+  });
+  document.body.classList.remove('on-dark');
+}
+if(/(?:^|[?&])print/.test(location.search)){
+  // render after layout settles so SVG charts size to their print containers
+  requestAnimationFrame(()=>requestAnimationFrame(enterPrintMode));
+}
+window.addEventListener('beforeprint',enterPrintMode);
+</script>
+</body>
+</html>
